@@ -7,7 +7,14 @@ Servo serv1;
 Servo serv2;
 Servo servVert;
 Servo servHortz;
+int joyPinx = 8;
+int joyPiny = 9;
+int valuex = 0;
+int valuey = 0;
+int x = 0;
+int y = 0;
 int thing;
+int codes{3};
 int pastTime = 1500;
 int choice = 0;
 int pos = 0; //Speed of servo 1
@@ -18,7 +25,9 @@ void setup() {
   serv1.attach(9);
   servVert.attach(7);
   servHortz.attach(6);
-  Serial.begin(115200);
+  digitalWrite(11, HIGH);
+  pinMode(11, INPUT);
+  Serial.begin(9600);
   while (! Serial) {
     delay(1);
   }
@@ -40,11 +49,102 @@ int checkTime(int interval, unsigned long previousMillis) {
     return true;
   }
 }
+void joyStick() {
+  // put your main code here, to run repeatedly:
+  valuex = analogRead(joyPinx);
+  delay(10);
+  valuey = analogRead(joyPiny);
+
+  digitalWrite(11, HIGH);
+  int val = digitalRead(11);
+
+  Serial.println(val);
+
+  if (valuey < 500) {
+    if (valuex >= 400 && valuex <= 600) {
+      x = 0;
+      y = 1;
+    }
+    else if (valuex < 400) {
+      x = -1;
+      y = 0;
+    }
+    else if (valuex > 600) {
+      x = 1;
+      y = 0;
+    }
+  }
+  else if (valuey > 520) {
+    if (valuex >= 400 && valuex <= 600) {
+      x = 0;
+      y = -1;
+    }
+    else if (valuex < 400) {
+      x = -1;
+      y = 0;
+    }
+    else if (valuex > 600) {
+      x = 1;
+      y = 0;
+    }
+  }
+  else if (valuey = 510) {
+    if (valuex >= 400 && valuex <= 600) {
+      x = 0;
+      y = 0;
+    }
+    else if (valuex < 400) {
+      x = -1;
+      y = 0;
+    }
+    else if (valuex > 600) {
+      x = 1;
+      y = 0;
+    }
+  }
+  else {
+    x = 0;
+    y = 0;
+  }
+
+
+  int answer[] = {x, y, val};
+
+
+  Serial.print(x);
+  Serial.print(" ");
+  Serial.println(y);
+  if (val == 0){
+    choice = 1;
+    pos =95;
+    pos2 =95;
+  }
+  if (x == 0 && y ==0){
+    pos =95;
+    pos2 =95;
+  }
+  if (y == 1) {
+    pos = 180;
+    pos2 = 0;
+  }
+  else if (y == -1){
+  pos = 0;
+  pos2 = 180;
+}
+else if (x == 1) {
+    pos = 0;
+    pos2 = 0;
+  } else if (x == -1) {
+    pos = 180;
+    pos2 = 180;
+  }
+
+}
 void dontHitWall() {
   thing = digitalRead(10);
   if (thing == LOW) {
-    pos = 95;
-    pos2 = 95;
+    pos = 180;
+    pos2 = 0;
     serv1.write(pos);
     serv2.write(pos2);
   }
@@ -134,22 +234,25 @@ void maping() {
 }
 
 void loop() {
+  joyStick();
   if (choice == 0) {
 
     servVert.write(130);
     servHortz.write(34);
     serv1.write(pos);
     serv2.write(pos2);
-    for ( int i = 0; i <= 1000; i++) {
-      dontHitWall();
-      delay(1);
-    }
-    choice += 1;
+    dontHitWall();
 
-  } else {
+
+  } else if (choice == 1) {
     serv1.write(95);
-    serv2.write(94.8);
+    serv2.write(95);
+    pos = 95;
+    pos2 =95;
     scan();
+    serv1.write(95);
+    serv2.write(95);
+    delay(500);
     choice = 0;
   }
 
